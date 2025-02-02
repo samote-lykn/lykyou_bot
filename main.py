@@ -19,7 +19,7 @@ def main():
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('custom', custom_command))
     app.add_handler(CommandHandler("youtube", save_chat_id_and_keep_updated))
-    app.add_handler(CommandHandler("youtubeLatest", fetch_latest_video_and_send))
+    app.add_handler(CommandHandler("youtubelatest", fetch_latest_video_and_send))
 
     print('Commands loaded.')
 
