@@ -4,8 +4,10 @@ import json
 import requests
 from youtube.utils import CHAT_ID_FILE, create_rss_youtube_url
 import config
+import xml.etree.ElementTree as ET
 
 YOUTUBE_RSS_URL = create_rss_youtube_url(config.YOUTUBE_CHANNEL_ID)
+REQUIRED_KEYWORD = config.REQUIRED_KEYWORD.lower()  # Convert to lowercase  # Replace with your specific hashtag
 
 # ✅ Load chat IDs
 def load_chat_ids():
@@ -25,12 +27,21 @@ def get_latest_video():
     try:
         response = requests.get(YOUTUBE_RSS_URL)
         if response.status_code == 200:
-            data = response.text
-            video_id = data.split("<yt:videoId>")[1].split("</yt:videoId>")[0]
-            return f"https://www.youtube.com/watch?v={video_id}"
+            root = ET.fromstring(response.text)
+            entries = root.findall("{http://www.w3.org/2005/Atom}entry")
+            print(entries)
+            for entry in entries:  # Iterate through all videos in the feed
+                video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
+                title = entry.find("{http://www.w3.org/2005/Atom}title").text.lower()  # Convert to lowercase
+
+                # Check if the title contains the required hashtag
+                if REQUIRED_KEYWORD in title:
+                    return f"https://www.youtube.com/watch?v={video_id}"  # Return the first matching video
+
     except Exception as e:
         print(f"Error fetching latest video: {e}")
-    return None
+
+    return None  # No video found with the required hashtag
 
 # ✅ Function to check YouTube updates periodically
 async def check_youtube_updates(context: CallbackContext):
@@ -40,22 +51,27 @@ async def check_youtube_updates(context: CallbackContext):
     try:
         response = requests.get(YOUTUBE_RSS_URL)
         if response.status_code == 200:
-            data = response.text
-            video_id = data.split("<yt:videoId>")[1].split("</yt:videoId>")[0]
+            root = ET.fromstring(response.text)
+            entries = root.findall("{http://www.w3.org/2005/Atom}entry")
 
-            if video_id != last_video_id:
-                last_video_id = video_id
-                video_url = f"https://www.youtube.com/watch?v={video_id}"
+            for entry in entries:  # Iterate through all recent videos
+                video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
+                title = entry.find("{http://www.w3.org/2005/Atom}title").text.lower()  # Convert to lowercase
+                print(title)
+                if REQUIRED_KEYWORD in title:
+                    if video_id != last_video_id:  # Ensure it's a new video
+                        last_video_id = video_id
+                        video_url = f"https://www.youtube.com/watch?v={video_id}"
 
-                chat_ids = load_chat_ids()
-                for chat_id in chat_ids:
-                    await bot.send_message(chat_id, f"📢 New Video: {video_url}")
+                        chat_ids = load_chat_ids()
+                        for chat_id in chat_ids:
+                            await bot.send_message(chat_id, f"📢 New Video: {video_url}")
 
-                context.job.data["last_video_id"] = last_video_id
+                        context.job.data["last_video_id"] = last_video_id
+                        return  # Stop after finding the most recent matching video
 
     except Exception as e:
         print(f"Error checking YouTube RSS: {e}")
-
 # ✅ Subscribe user, send first video, and start job
 async def save_chat_id_and_keep_updated(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
