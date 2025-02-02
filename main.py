@@ -3,7 +3,7 @@ import config
 from modules.logger import handle_error
 from modules.responses import handle_message
 from modules.commands import start_command, custom_command, help_command
-from youtube.polling import save_chat_id_and_keep_updated, check_youtube_updates
+from youtube.polling import save_chat_id_and_keep_updated, check_youtube_updates, fetch_latest_video_and_send
 
 def main():
     print(f'Starting bot... {config.BOT_USERNAME}')
@@ -19,6 +19,7 @@ def main():
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('custom', custom_command))
     app.add_handler(CommandHandler("youtube", save_chat_id_and_keep_updated))
+    app.add_handler(CommandHandler("youtubeLatest", fetch_latest_video_and_send))
 
     print('Commands loaded.')
 

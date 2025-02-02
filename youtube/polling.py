@@ -29,7 +29,6 @@ def get_latest_video():
         if response.status_code == 200:
             root = ET.fromstring(response.text)
             entries = root.findall("{http://www.w3.org/2005/Atom}entry")
-            print(entries)
             for entry in entries:  # Iterate through all videos in the feed
                 video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
                 title = entry.find("{http://www.w3.org/2005/Atom}title").text.lower()  # Convert to lowercase
@@ -57,7 +56,6 @@ async def check_youtube_updates(context: CallbackContext):
             for entry in entries:  # Iterate through all recent videos
                 video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
                 title = entry.find("{http://www.w3.org/2005/Atom}title").text.lower()  # Convert to lowercase
-                print(title)
                 if REQUIRED_KEYWORD in title:
                     if video_id != last_video_id:  # Ensure it's a new video
                         last_video_id = video_id
@@ -84,9 +82,7 @@ async def save_chat_id_and_keep_updated(update: Update, context: CallbackContext
     await update.message.reply_text("✅ You are now subscribed to YouTube updates!")
 
     # ✅ Fetch the latest video and send it immediately
-    latest_video = get_latest_video()
-    if latest_video:
-        await update.message.reply_text(f"🎬 Latest Video: {latest_video}")
+    await fetch_latest_video_and_send(update, context)
 
     # ✅ Start job if not already running
     job_name = "youtube_updates"
@@ -101,3 +97,9 @@ async def save_chat_id_and_keep_updated(update: Update, context: CallbackContext
             data={"last_video_id": None},
         )
         print("✅ YouTube update job started!")
+
+# ✅ Fetch the latest video and send it immediately
+async def fetch_latest_video_and_send(update: Update, context: CallbackContext):
+    latest_video = get_latest_video()
+    if latest_video:
+        await update.message.reply_text(f"🎬 Latest Video: {latest_video}")
