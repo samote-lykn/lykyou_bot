@@ -18,7 +18,7 @@ def main():
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('custom', custom_command))
-    app.add_handler(CommandHandler("followYoutubeUpdates", save_chat_id_and_keep_updated))
+    app.add_handler(CommandHandler("youtube", save_chat_id_and_keep_updated))
 
     print('Commands loaded.')
 
