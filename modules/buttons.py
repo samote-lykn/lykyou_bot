@@ -3,6 +3,7 @@ from const.lykn import Members
 
 
 async def example_button_generation(update: Update, context):
+    # load buttons like this in main -> app.add_handler(CallbackQueryHandler(button))
     keyboard = [
         [InlineKeyboardButton("Last Youtube video", callback_data='lastvideo')],
         [InlineKeyboardButton('Tui', callback_data=Members.TUI)],

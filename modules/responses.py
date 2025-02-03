@@ -1,13 +1,13 @@
-from telegram import Update
 from const.lykn import FanBase, Members, BotChatType
 import config
 from telegram.ext import ContextTypes
 from telegram import Chat as BotChatType
+from telegram import Update
 
 # responses
 def handle_response(text:str) -> str:
     processed: str = text.lower()
-    print(processed)
+    print(f'handle_response: {processed}')
     if FanBase.LYKN in processed:
         return 'Hi LYKYOU! 🎉'
     if Members.TUI in processed:

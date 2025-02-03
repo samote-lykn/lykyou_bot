@@ -2,17 +2,14 @@ from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, CallbackQueryHandler
 import config
 from modules.logger import handle_error
-from modules.responses import handle_message
 from modules.commands import start_command, custom_command, help_command
 from youtube.polling import save_chat_id_and_keep_updated, check_youtube_updates, fetch_latest_video_and_send
 from modules.suggestions import suggestions_members
-
+from lynk_wiki.about import button_social_response, handle_member_choice
 
 async def start(update: Update, context) -> None:
     await start_command(update, context)
     await suggestions_members(update, context)
-
-
 
 def main():
     print(f'Starting bot... {config.BOT_USERNAME}')
@@ -33,7 +30,9 @@ def main():
     print('Commands loaded.')
 
     # ✅ Messages
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_member_choice))
+    app.add_handler(CallbackQueryHandler(button_social_response))
+
     print('Messages handler loaded.')
 
     # ✅ Errors
