@@ -5,7 +5,7 @@ import requests
 from youtube.utils import CHAT_ID_FILE, create_rss_youtube_url
 import config
 import xml.etree.ElementTree as ET
-
+from const.emoji import Emoji
 YOUTUBE_RSS_URL = create_rss_youtube_url(config.YOUTUBE_CHANNEL_ID)
 REQUIRED_KEYWORD = config.REQUIRED_KEYWORD.lower()  # Convert to lowercase  # Replace with your specific hashtag
 
@@ -63,7 +63,7 @@ async def check_youtube_updates(context: CallbackContext):
 
                         chat_ids = load_chat_ids()
                         for chat_id in chat_ids:
-                            await bot.send_message(chat_id, f"📢 New Video: {video_url}")
+                            await bot.send_message(chat_id, f"{Emoji.SPEAKER} New Video: {video_url}")
 
                         context.job.data["last_video_id"] = last_video_id
                         return  # Stop after finding the most recent matching video
@@ -79,7 +79,7 @@ async def save_chat_id_and_keep_updated(update: Update, context: CallbackContext
         chat_ids.append(chat_id)
         save_chat_ids(chat_ids)
 
-    await update.message.reply_text("✅ You are now subscribed to YouTube updates!")
+    await update.message.reply_text(f"{Emoji.CHECK_MARK} You are now subscribed to YouTube updates!")
 
     # ✅ Fetch the latest video and send it immediately
     await fetch_latest_video_and_send(update, context)
@@ -96,10 +96,10 @@ async def save_chat_id_and_keep_updated(update: Update, context: CallbackContext
             name=job_name,
             data={"last_video_id": None},
         )
-        print("✅ YouTube update job started!")
+        print(f"{Emoji.CHECK_MARK} YouTube update job started!")
 
 # ✅ Fetch the latest video and send it immediately
 async def fetch_latest_video_and_send(update: Update, context: CallbackContext):
     latest_video = get_latest_video()
     if latest_video:
-        await update.message.reply_text(f"🎬 Latest Video: {latest_video}")
+        await update.message.reply_text(f"{Emoji.CLAPPER_BOARD} Latest Video: {latest_video}")

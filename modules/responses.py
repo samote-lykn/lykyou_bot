@@ -1,15 +1,15 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from const import FanBase, Members, BotChatType
+from const.lykn import FanBase, Members, BotChatType
 import config
+from telegram.ext import ContextTypes
+from telegram import Chat as BotChatType
 
 # responses
-
 def handle_response(text:str) -> str:
     processed: str = text.lower()
     print(processed)
     if FanBase.LYKN in processed:
-        return 'Hi LYKYOU!'
+        return 'Hi LYKYOU! 🎉'
     if Members.TUI in processed:
         return 'Hi Tui!'
     if Members.NUT in processed:
@@ -20,11 +20,10 @@ def handle_response(text:str) -> str:
         return 'Hi William!'
     if Members.HONG in processed:
         return 'Hi Hong!'
-    return 'Hi LYKYOU!'
-
+    return 'Hi LYKYOU! 🎉'
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message_type: str =update.message.chat.type #from group or solo
+    message_type: str = update.message.chat.type  #from group or private
     text: str = update.message.text #incoming message
 
     print(f'User ({update.message.chat.id}) in {message_type}: "{text}"')
@@ -38,5 +37,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         print('Private')
         response: str = handle_response(text)
-    print('Bot', response)
+
+    print('Bot response:', response)
     await update.message.reply_text(response)
+
