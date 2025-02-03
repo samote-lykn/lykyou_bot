@@ -87,6 +87,16 @@ class Emoji:
     TIGER = "\U0001F405"  # 🐅
     UNICORN = "\U0001F984"  # 🦄
 
+    # Indications
+    RIGHT_ARROW = "\U000027A1" #➡️
+    FAST_FORWARD = "\U000023E9 "  # ⏩
+    SOON = "\U0001F51C"  # 🔜️
+    NEW = "\U0001F195"  # 🆕
+    PROGRESS = "\U0001F680"  # 🚀
+    WARNING = "\U000026A0" # ⚠
+    POLICE_ALARM = "\U0001F6A8" #🚨
+    EXCLAMATION_MARK= "\U00002757" #❗
+
     @classmethod
     def list_all(cls):
         """Returns all emoji mappings."""
