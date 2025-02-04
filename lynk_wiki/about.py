@@ -1,10 +1,42 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from contextlib import nullcontext
+
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, CallbackQueryHandler
 
 from const.emoji import Emoji
 from const.lykn import MembersLink, Members
 
 user_selected_members = {}  # Stores user selections (user_id -> member)
+
+# Command
+async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"{Emoji.PARTY} Do you wanna know more about LYKN?")
+    await suggestions_members(update, context)
+
+# Suggestion
+
+async def suggestions_members(update: Update, context):
+    # Suggested replies
+    keyboard = [[Members.NUT.upper(),
+                 Members.TUI.upper(),
+                 Members.LEGO.upper(),
+                 Members.WILLIAM.upper(),
+                 Members.HONG.upper()]]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True,
+                                       input_field_placeholder="Type or select a member...")
+
+    if update.message:
+        # Regular message
+        await update.message.reply_text(f"{Emoji.RIGHT_ARROW} Choose a member:", reply_markup=reply_markup)
+    elif update.callback_query:
+        # Inline button callback
+        await update.callback_query.message.reply_text(f"{Emoji.RIGHT_ARROW} Choose a member:",
+                                                       reply_markup=reply_markup)
+
+    # Remove the keyboard after user selects something
+    # update.message.reply_text(f"You said: {user_text}", reply_markup=ReplyKeyboardRemove())
+
 
 # Handle member selection
 async def handle_member_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,12 +61,16 @@ async def button_socials(update: Update, context, chosen_member):
         [InlineKeyboardButton("Instagram", callback_data='INSTAGRAM')],
         [InlineKeyboardButton("Twitter", callback_data='TWITTER')],
         [InlineKeyboardButton("TikTok", callback_data='TIKTOK')],
+        [InlineKeyboardButton("Select another member", callback_data='suggestions_members')],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(f"{Emoji.RIGHT_ARROW} You selected {chosen_member}. Now choose a social:", reply_markup=reply_markup)
-
-
+    await update.message.reply_text(f"{Emoji.PARTY} You selected '{chosen_member.upper()}'",
+                                    reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
+    await update.message.reply_text(  # Now send inline buttons
+        f"{Emoji.RIGHT_ARROW} Now choose a social:",
+        reply_markup=reply_markup
+    )
 # Handle button clicks
 async def button_social_response(update: Update, context) -> None:
     query = update.callback_query
@@ -57,6 +93,13 @@ async def button_social_response(update: Update, context) -> None:
     }
 
     print(f"{Emoji.RIGHT_ARROW} Chosen social: {chosen_social}")
+
+    if chosen_social == 'suggestions_members':
+        print(f"{Emoji.EXCLAMATION_MARK} Deleting chosen member")
+        del user_selected_members[user_id]
+        await suggestions_members(update, context)
+        print(f"{Emoji.WARNING} Suggestions reloaded")
+        return
 
     if chosen_social in social_links:
         link = social_links[chosen_social].get(selected_member, "No link available.")

@@ -1,15 +1,11 @@
-from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters, ApplicationBuilder, CallbackQueryHandler
 import config
 from modules.logger import handle_error
-from modules.commands import start_command, custom_command, help_command
+from modules.commands import start, custom_command, help_command
 from youtube.polling import save_chat_id_and_keep_updated, check_youtube_updates, fetch_latest_video_and_send
-from modules.suggestions import suggestions_members
-from lynk_wiki.about import button_social_response, handle_member_choice
+from lynk_wiki.about import button_social_response, handle_member_choice, about_command
 
-async def start(update: Update, context) -> None:
-    await start_command(update, context)
-    await suggestions_members(update, context)
+
 
 def main():
     print(f'Starting bot... {config.BOT_USERNAME}')
@@ -23,6 +19,7 @@ def main():
     # ✅ Commands
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('about', about_command))
     app.add_handler(CommandHandler('custom', custom_command))
     app.add_handler(CommandHandler("youtube", save_chat_id_and_keep_updated))
     app.add_handler(CommandHandler("youtubelatest", fetch_latest_video_and_send))

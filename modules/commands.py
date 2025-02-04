@@ -1,6 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
+async def start(update: Update, context) -> None:
+    await start_command(update, context)
+
 # commands
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Hello LYKYOU, welcome to the fanbase. Hope you will enjoy my updates with joy. Keep the fam kind and fun.')
