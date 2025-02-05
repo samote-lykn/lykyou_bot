@@ -1,12 +1,10 @@
-from contextlib import nullcontext
-
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import ContextTypes, CallbackQueryHandler
-
+from telegram.ext import ContextTypes
 from const.emoji import Emoji
 from const.lykn import MembersLink, Members
 
 user_selected_members = {}  # Stores user selections (user_id -> member)
+
 
 # Command
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -16,6 +14,15 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Suggestion
 
 async def suggestions_members(update: Update, context):
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
+    app = context.application  # Get the Application instance
+    toggle_handler(app, MEMBER_CHOICE_HANDLER, True)
+    toggle_handler(app, ASK_SOCIALS_HANDLER, False)
+
     # Suggested replies
     keyboard = [[Members.NUT.upper(),
                  Members.TUI.upper(),
@@ -37,6 +44,31 @@ async def suggestions_members(update: Update, context):
     # Remove the keyboard after user selects something
     # update.message.reply_text(f"You said: {user_text}", reply_markup=ReplyKeyboardRemove())
 
+async def ask_for_socials(update: Update, context):
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
+    app = context.application  # Get the Application instance
+    toggle_handler(app, MEMBER_CHOICE_HANDLER, False)
+    toggle_handler(app, ASK_SOCIALS_HANDLER, True)
+
+    # Suggested replies
+    keyboard = [['YES',
+                 'NO']]
+
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True,
+                                       input_field_placeholder="Type or select a answear...")
+
+    if update.message:
+        # Regular message
+        await update.message.reply_text(f"{Emoji.RIGHT_ARROW} Do you wanna follow him on socials?", reply_markup=reply_markup)
+    elif update.callback_query:
+        # Inline button callback
+        await update.callback_query.message.reply_text(f"{Emoji.RIGHT_ARROW} Do you wanna follow him on socials?",
+                                                       reply_markup=reply_markup)
+
 
 # Handle member selection
 async def handle_member_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,12 +83,39 @@ async def handle_member_choice(update: Update, context: ContextTypes.DEFAULT_TYP
     # Save user selection
     user_selected_members[user_id] = chosen_member
 
-    # Ask for social platform selection
-    await button_socials(update, context, chosen_member)
+    await update.message.reply_text(f"{Emoji.PARTY} You selected '{chosen_member.upper()}'",
+                                    reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
 
+    wiki =  MembersLink.WIKI_LINKS.get(chosen_member, "No link available.")
+    if wiki == "No link available.":
+        await update.message.reply_text(f"{Emoji.POLICE_ALARM} {wiki}")
+    else:
+        await update.message.reply_text(
+            f"{Emoji.PROGRESS} Learn more about '{chosen_member.upper()}': {wiki}")
+        # Ask for social platform selection
+        await ask_for_socials(update, context)
+
+
+async def handle_ask_for_socials(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
+    if 'YES' in update.message.text.upper():
+        await update.message.reply_text(f"{Emoji.PARTY} Let me load his socials...'",
+                                        reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
+        # Ask for social platform selection
+        await button_socials(update, context)
+    else:
+        await update.message.reply_text(f"{Emoji.CROSS_MARK} Nevermind...'",
+                                        reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
+        app = context.application  # Get the Application instance
+        toggle_handler(app, MEMBER_CHOICE_HANDLER, False)
+        toggle_handler(app, ASK_SOCIALS_HANDLER, False)
 
 # Send social media buttons
-async def button_socials(update: Update, context, chosen_member):
+async def button_socials(update: Update, context):
     keyboard = [
         [InlineKeyboardButton("Instagram", callback_data='INSTAGRAM')],
         [InlineKeyboardButton("Twitter", callback_data='TWITTER')],
@@ -65,22 +124,27 @@ async def button_socials(update: Update, context, chosen_member):
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(f"{Emoji.PARTY} You selected '{chosen_member.upper()}'",
-                                    reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
+
     await update.message.reply_text(  # Now send inline buttons
         f"{Emoji.RIGHT_ARROW} Now choose a social:",
         reply_markup=reply_markup
     )
 # Handle button clicks
 async def button_social_response(update: Update, context) -> None:
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
     query = update.callback_query
     await query.answer()
-
+    app = context.application  # Get the Application instance
     user_id = query.from_user.id  # FIXED: Use `query.from_user.id`
     chosen_social = query.data  # FIXED: No need for `.lower()` (already uppercase)
 
     if user_id not in user_selected_members:
         await query.message.reply_text(f"{Emoji.WARNING} Please select a member first.")
+        await suggestions_members(update, context)
         return
 
     selected_member = user_selected_members[user_id]
