@@ -4,6 +4,31 @@ from const.emoji import Emoji
 from const.lykn import MembersLink, Members
 
 user_selected_members = {}  # Stores user selections (user_id -> member)
+class aboutHandles:
+    SOCIAL= 'social'
+    MEMBERS = 'members'
+
+#toggle handler
+def disable_all_about_handlers(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
+    app = context.application  # Get the Application instance
+    toggle_handler(app, MEMBER_CHOICE_HANDLER, False)
+    toggle_handler(app, ASK_SOCIALS_HANDLER, False)
+
+def enable_one_about_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, handlerKey: str):
+    from modules.handlers import toggle_handler
+    from modules.handlers import (
+        MEMBER_CHOICE_HANDLER,
+        ASK_SOCIALS_HANDLER
+    )
+    app = context.application  # Get the Application instance
+    toggle_handler(app, ASK_SOCIALS_HANDLER, handlerKey == aboutHandles.SOCIAL)
+    toggle_handler(app, MEMBER_CHOICE_HANDLER,  handlerKey == aboutHandles.MEMBERS)
+
 
 
 # Command
@@ -14,14 +39,7 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Suggestion
 
 async def suggestions_members(update: Update, context):
-    from modules.handlers import toggle_handler
-    from modules.handlers import (
-        MEMBER_CHOICE_HANDLER,
-        ASK_SOCIALS_HANDLER
-    )
-    app = context.application  # Get the Application instance
-    toggle_handler(app, MEMBER_CHOICE_HANDLER, True)
-    toggle_handler(app, ASK_SOCIALS_HANDLER, False)
+    enable_one_about_handler(update, context, aboutHandles.MEMBERS)
 
     # Suggested replies
     keyboard = [[Members.NUT.upper(),
@@ -45,14 +63,7 @@ async def suggestions_members(update: Update, context):
     # update.message.reply_text(f"You said: {user_text}", reply_markup=ReplyKeyboardRemove())
 
 async def ask_for_socials(update: Update, context):
-    from modules.handlers import toggle_handler
-    from modules.handlers import (
-        MEMBER_CHOICE_HANDLER,
-        ASK_SOCIALS_HANDLER
-    )
-    app = context.application  # Get the Application instance
-    toggle_handler(app, MEMBER_CHOICE_HANDLER, False)
-    toggle_handler(app, ASK_SOCIALS_HANDLER, True)
+    enable_one_about_handler(update, context, aboutHandles.SOCIAL)
 
     # Suggested replies
     keyboard = [['YES',
@@ -97,11 +108,6 @@ async def handle_member_choice(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def handle_ask_for_socials(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from modules.handlers import toggle_handler
-    from modules.handlers import (
-        MEMBER_CHOICE_HANDLER,
-        ASK_SOCIALS_HANDLER
-    )
     if 'YES' in update.message.text.upper():
         await update.message.reply_text(f"{Emoji.PARTY} Let me load his socials...'",
                                         reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
@@ -111,8 +117,7 @@ async def handle_ask_for_socials(update: Update, context: ContextTypes.DEFAULT_T
         await update.message.reply_text(f"{Emoji.CROSS_MARK} Nevermind...'",
                                         reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
         app = context.application  # Get the Application instance
-        toggle_handler(app, MEMBER_CHOICE_HANDLER, False)
-        toggle_handler(app, ASK_SOCIALS_HANDLER, False)
+        disable_all_about_handlers(update, context)
 
 # Send social media buttons
 async def button_socials(update: Update, context):
@@ -131,14 +136,8 @@ async def button_socials(update: Update, context):
     )
 # Handle button clicks
 async def button_social_response(update: Update, context) -> None:
-    from modules.handlers import toggle_handler
-    from modules.handlers import (
-        MEMBER_CHOICE_HANDLER,
-        ASK_SOCIALS_HANDLER
-    )
     query = update.callback_query
     await query.answer()
-    app = context.application  # Get the Application instance
     user_id = query.from_user.id  # FIXED: Use `query.from_user.id`
     chosen_social = query.data  # FIXED: No need for `.lower()` (already uppercase)
 
