@@ -4,7 +4,7 @@ import time
 import config
 from utils import create_rss_youtube_url
 import json
-from utils import CHAT_ID_FILE
+from youtube.config import CHAT_ID_FILE
 
 # Store the last video ID to avoid duplicates
 last_video_id = None

@@ -2,7 +2,8 @@ from telegram import Update
 from telegram.ext import CallbackContext
 import json
 import requests
-from youtube.utils import CHAT_ID_FILE, create_rss_youtube_url
+from youtube.config import CHAT_ID_FILE
+from youtube.utils import create_rss_youtube_url
 import config
 import xml.etree.ElementTree as ET
 from const.emoji import Emoji

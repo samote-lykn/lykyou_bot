@@ -2,7 +2,7 @@ from flask import Flask, request
 import requests
 import json
 import config
-from utils import CHAT_ID_FILE
+from youtube.config import CHAT_ID_FILE
 
 URL = f"https://api.telegram.org/bot{config.TOKEN}"
 
