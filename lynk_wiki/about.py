@@ -2,8 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKe
 from telegram.ext import ContextTypes
 from const.emoji import Emoji
 from const.lykn import MembersLink, Members
+from mongoDB.about_member_selection import update_selected_member, get_user_selection, delete_user_selection
 
-user_selected_members = {}  # Stores user selections (user_id -> member)
 class aboutHandles:
     SOCIAL= 'social'
     MEMBERS = 'members'
@@ -92,7 +92,7 @@ async def handle_member_choice(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     # Save user selection
-    user_selected_members[user_id] = chosen_member
+    await update_selected_member(user_id, chosen_member)
 
     await update.message.reply_text(f"{Emoji.PARTY} You selected '{chosen_member.upper()}'",
                                     reply_markup=ReplyKeyboardRemove())  # Removes reply keyboard
@@ -141,12 +141,19 @@ async def button_social_response(update: Update, context) -> None:
     user_id = query.from_user.id  # FIXED: Use `query.from_user.id`
     chosen_social = query.data  # FIXED: No need for `.lower()` (already uppercase)
 
-    if user_id not in user_selected_members:
-        await query.message.reply_text(f"{Emoji.WARNING} Please select a member first.")
+    # Get the user's selection
+    user_selection = await get_user_selection(user_id)
+
+    # Check if user selection is None or doesn't have a valid 'selected_member'
+    if not user_selection or not user_selection.get('selected_member'):
+        # Send a warning message if no selection is made
+        await update.message.reply_text(f"{Emoji.WARNING} Please select a member first.")
+
+        # Call the function to show suggestions or prompt the user to select a member
         await suggestions_members(update, context)
         return
 
-    selected_member = user_selected_members[user_id]
+    selected_member = user_selection.get('selected_member')
 
     # Get the correct social media link
     social_links = {
@@ -159,7 +166,7 @@ async def button_social_response(update: Update, context) -> None:
 
     if chosen_social == 'suggestions_members':
         print(f"{Emoji.EXCLAMATION_MARK} Deleting chosen member")
-        del user_selected_members[user_id]
+        await delete_user_selection(user_id)
         await suggestions_members(update, context)
         print(f"{Emoji.WARNING} Suggestions reloaded")
         return

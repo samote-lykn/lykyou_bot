@@ -1,0 +1,43 @@
+# Connect to the MongoDB server (localhost by default)
+client = MongoClient(MONGO_DB_URI)  # Replace with your MongoDB URI if needed
+
+# Create a database
+db = client[MONGO_DB_DATABASE]
+
+# Create a collection (equivalent to a table in relational DB)
+collection = db['your_collection_name']
+
+---
+
+# Example: Insert a document into the collection
+collection.insert_one({'name': 'Alice', 'age': 30})
+
+# Example: Find a document
+document = collection.find_one({'name': 'Alice'})
+
+# Example: Update a document
+collection.update_one({'name': 'Alice'}, {'$set': {'age': 31}})
+
+# Example: Delete a document
+collection.delete_one({'name': 'Alice'})
+
+---
+# Access the database from the db module
+
+from db import get_db
+db = get_db()
+
+___
+
+# Special Notes:
+# If you're using a password with special characters (like @, /, etc.) in your MONGO_DB_URI,
+# you may need to URL-encode them. For example, @ should be %40.
+# You can use an online URL encoder or Python’s urllib.parse to encode
+# the password programmatically.
+
+from urllib.parse import quote_plus
+password = "your_password_with_special_chars"
+encoded_password = quote_plus(password)
+MONGO_DB_URI = f"mongodb+srv://samotelykn:{encoded_password}@lykyou-1.pdrq5.mongodb.net/"
+# Ensure that your MongoDB connection string includes the correct database name at the end (e.g., /your_database_name).
+# If you're not specifying one, MongoDB defaults to a test database.
