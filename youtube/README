@@ -1,0 +1,2 @@
+#add this line to main
+app.job_queue.run_repeating(check_youtube_updates, interval=300, first=5, data={"last_video_id": None})
