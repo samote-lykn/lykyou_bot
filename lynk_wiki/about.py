@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes
 from const.emoji import Emoji
 from const.lykn import MembersLink, Members
 from mongoDB.about_member_selection import update_selected_member, get_user_selection, delete_user_selection
+from mongoDB.classes import User
 
 class aboutHandles:
     SOCIAL= 'social'
@@ -142,10 +143,10 @@ async def button_social_response(update: Update, context) -> None:
     chosen_social = query.data  # FIXED: No need for `.lower()` (already uppercase)
 
     # Get the user's selection
-    user_selection = await get_user_selection(user_id)
+    user_selection: User = await get_user_selection(user_id)
 
     # Check if user selection is None or doesn't have a valid 'selected_member'
-    if not user_selection or not user_selection.get('selected_member'):
+    if not user_selection or not user_selection.selected_member:
         # Send a warning message if no selection is made
         await update.message.reply_text(f"{Emoji.WARNING} Please select a member first.")
 
@@ -153,7 +154,7 @@ async def button_social_response(update: Update, context) -> None:
         await suggestions_members(update, context)
         return
 
-    selected_member = user_selection.get('selected_member')
+    selected_member = user_selection.selected_member
 
     # Get the correct social media link
     social_links = {
